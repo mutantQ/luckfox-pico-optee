@@ -1,0 +1,23 @@
+#!/bin/sh
+
+case "$1" in
+  start)
+    printf "Starting tee-supplicant: "
+    start-stop-daemon -S -b -x /usr/bin/tee-supplicant
+    echo "OK"
+    ;;
+  stop)
+    printf "Stopping tee-supplicant: "
+    start-stop-daemon -K -x /usr/bin/tee-supplicant
+    echo "OK"
+    ;;
+  restart|reload)
+    $0 stop
+    $0 start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+esac
+
+exit 0
