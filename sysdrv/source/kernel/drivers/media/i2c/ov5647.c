@@ -143,6 +143,7 @@ struct ov5647 {
 	struct v4l2_ctrl		*auto_wb;
 	struct v4l2_ctrl		*exposure;
 	struct v4l2_ctrl		*gain;
+	int				current_mode;  /* index into ov5647_modes[] */
 };
 
 static inline struct ov5647 *to_state(struct v4l2_subdev *sd)
@@ -267,6 +268,133 @@ static struct regval_list ov5647_640x480[] = {
 	{0x4800, 0x34},
 	{0x0100, 0x01},
 };
+
+/* 2592x1944 full resolution 8-bit mode */
+static struct regval_list ov5647_2592x1944[] = {
+	{0x0100, 0x00},
+	{0x0103, 0x01},
+	{0x3034, 0x08},  /* 8-bit mode */
+	{0x3035, 0x21},
+	{0x3036, 0x69},  /* PLL multiplier for full res */
+	{0x303c, 0x11},
+	{0x3106, 0xf5},
+	{0x3821, 0x06},  /* No mirror */
+	{0x3820, 0x00},  /* No flip */
+	{0x3827, 0xec},
+	{0x370c, 0x03},
+	{0x3612, 0x5b},
+	{0x3618, 0x04},
+	{0x5000, 0x06},
+	{0x5001, 0x01},  /* AWB enable */
+	{0x5002, 0x41},
+	{0x5003, 0x00},  /* Disable embedded data */
+	{0x503d, 0x00},
+	{0x5a00, 0x08},
+	{0x3503, 0x00},  /* AEC/AGC auto */
+	{0x3500, 0x00},
+	{0x3501, 0x40},
+	{0x3502, 0x00},
+	{0x350a, 0x00},
+	{0x350b, 0x40},
+	{0x3000, 0x00},
+	{0x3001, 0x00},
+	{0x3002, 0x00},
+	{0x3016, 0x08},
+	{0x3017, 0xe0},
+	{0x3018, 0x44},  /* 2 lanes, MIPI */
+	{0x301c, 0xf8},
+	{0x301d, 0xf0},
+	{0x3a18, 0x00},
+	{0x3a19, 0xf8},
+	{0x3c01, 0x80},
+	{0x3b07, 0x0c},
+	/* Timing - full resolution */
+	{0x380c, 0x0b},  /* HTS high */
+	{0x380d, 0x1c},  /* HTS low = 2844 */
+	{0x380e, 0x07},  /* VTS high */
+	{0x380f, 0xb0},  /* VTS low = 1968 */
+	{0x3814, 0x11},  /* X subsample: no skip */
+	{0x3815, 0x11},  /* Y subsample: no skip */
+	{0x3708, 0x64},
+	{0x3709, 0x12},
+	{0x3808, 0x0a},  /* X output high */
+	{0x3809, 0x20},  /* X output low = 2592 */
+	{0x380a, 0x07},  /* Y output high */
+	{0x380b, 0x98},  /* Y output low = 1944 */
+	{0x3800, 0x00},  /* X start high */
+	{0x3801, 0x00},  /* X start low */
+	{0x3802, 0x00},  /* Y start high */
+	{0x3803, 0x00},  /* Y start low */
+	{0x3804, 0x0a},  /* X end high */
+	{0x3805, 0x3f},  /* X end low */
+	{0x3806, 0x07},  /* Y end high */
+	{0x3807, 0xa3},  /* Y end low */
+	{0x3810, 0x00},  /* ISP X offset high */
+	{0x3811, 0x10},  /* ISP X offset low */
+	{0x3812, 0x00},  /* ISP Y offset high */
+	{0x3813, 0x06},  /* ISP Y offset low */
+	{0x3630, 0x2e},
+	{0x3632, 0xe2},
+	{0x3633, 0x23},
+	{0x3634, 0x44},
+	{0x3636, 0x06},
+	{0x3620, 0x64},
+	{0x3621, 0xe0},
+	{0x3600, 0x37},
+	{0x3704, 0xa0},
+	{0x3703, 0x5a},
+	{0x3715, 0x78},
+	{0x3717, 0x01},
+	{0x3731, 0x02},
+	{0x370b, 0x60},
+	{0x3705, 0x1a},
+	{0x3f05, 0x02},
+	{0x3f06, 0x10},
+	{0x3f01, 0x0a},
+	{0x3a08, 0x01},
+	{0x3a09, 0x28},
+	{0x3a0a, 0x00},
+	{0x3a0b, 0xf6},
+	{0x3a0d, 0x08},
+	{0x3a0e, 0x06},
+	{0x3a0f, 0x58},
+	{0x3a10, 0x50},
+	{0x3a1b, 0x58},
+	{0x3a1e, 0x50},
+	{0x3a11, 0x60},
+	{0x3a1f, 0x28},
+	{0x4001, 0x02},
+	{0x4004, 0x04},
+	{0x4000, 0x09},
+	{0x4837, 0x19},  /* MIPI timing */
+	{0x4800, 0x34},
+	{0x0100, 0x01},
+};
+
+/* Supported modes */
+struct ov5647_mode {
+	u32 width;
+	u32 height;
+	struct regval_list *reg_list;
+	unsigned int num_regs;
+};
+
+static const struct ov5647_mode ov5647_modes[] = {
+	{
+		.width = 640,
+		.height = 480,
+		.reg_list = ov5647_640x480,
+		.num_regs = ARRAY_SIZE(ov5647_640x480),
+	},
+	{
+		.width = 2592,
+		.height = 1944,
+		.reg_list = ov5647_2592x1944,
+		.num_regs = ARRAY_SIZE(ov5647_2592x1944),
+	},
+};
+
+#define OV5647_NUM_MODES ARRAY_SIZE(ov5647_modes)
 
 static int ov5647_write(struct v4l2_subdev *sd, u16 reg, u8 val)
 {
@@ -394,18 +522,20 @@ static int set_sw_standby(struct v4l2_subdev *sd, bool standby)
 
 static int __sensor_init(struct v4l2_subdev *sd)
 {
+	struct ov5647 *ov5647 = to_state(sd);
+	const struct ov5647_mode *mode = &ov5647_modes[ov5647->current_mode];
 	int ret;
 	u8 resetval, rdval, mipi_ctrl;
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 
-	dev_info(&client->dev, "OV5647: __sensor_init starting\n");
+	dev_info(&client->dev, "OV5647: __sensor_init starting, mode %dx%d\n",
+		 mode->width, mode->height);
 
 	ret = ov5647_read(sd, OV5647_SW_STANDBY, &rdval);
 	if (ret < 0)
 		return ret;
 
-	ret = ov5647_write_array(sd, ov5647_640x480,
-					ARRAY_SIZE(ov5647_640x480));
+	ret = ov5647_write_array(sd, mode->reg_list, mode->num_regs);
 	if (ret < 0) {
 		dev_err(&client->dev, "write sensor default regs error\n");
 		return ret;
@@ -413,8 +543,8 @@ static int __sensor_init(struct v4l2_subdev *sd)
 
 	/* Debug: verify MIPI_CTRL00 was set correctly */
 	ov5647_read(sd, OV5647_REG_MIPI_CTRL00, &mipi_ctrl);
-	dev_info(&client->dev, "OV5647: __sensor_init wrote %zu regs, MIPI_CTRL00=0x%02x\n",
-		 ARRAY_SIZE(ov5647_640x480), mipi_ctrl);
+	dev_info(&client->dev, "OV5647: __sensor_init wrote %u regs, MIPI_CTRL00=0x%02x\n",
+		 mode->num_regs, mipi_ctrl);
 
 	ret = ov5647_set_virtual_channel(sd, 0);
 	if (ret < 0)
@@ -584,16 +714,16 @@ static int ov5647_enum_frame_size(struct v4l2_subdev *sd,
 				  struct v4l2_subdev_pad_config *cfg,
 				  struct v4l2_subdev_frame_size_enum *fse)
 {
-	if (fse->index > 0)
+	if (fse->index >= OV5647_NUM_MODES)
 		return -EINVAL;
 
 	if (fse->code != MEDIA_BUS_FMT_SBGGR8_1X8)
 		return -EINVAL;
 
-	fse->min_width = 640;
-	fse->max_width = 640;
-	fse->min_height = 480;
-	fse->max_height = 480;
+	fse->min_width = ov5647_modes[fse->index].width;
+	fse->max_width = ov5647_modes[fse->index].width;
+	fse->min_height = ov5647_modes[fse->index].height;
+	fse->max_height = ov5647_modes[fse->index].height;
 
 	return 0;
 }
@@ -619,6 +749,7 @@ static int ov5647_get_fmt(struct v4l2_subdev *sd,
 			  struct v4l2_subdev_format *fmt)
 {
 	struct ov5647 *ov5647 = to_state(sd);
+	const struct ov5647_mode *mode = &ov5647_modes[ov5647->current_mode];
 
 	mutex_lock(&ov5647->lock);
 
@@ -630,8 +761,8 @@ static int ov5647_get_fmt(struct v4l2_subdev *sd,
 		return -ENOTTY;
 #endif
 	} else {
-		fmt->format.width = 640;
-		fmt->format.height = 480;
+		fmt->format.width = mode->width;
+		fmt->format.height = mode->height;
 		fmt->format.code = MEDIA_BUS_FMT_SBGGR8_1X8;
 		fmt->format.field = V4L2_FIELD_NONE;
 		fmt->format.colorspace = V4L2_COLORSPACE_SRGB;
@@ -647,12 +778,24 @@ static int ov5647_set_fmt(struct v4l2_subdev *sd,
 			  struct v4l2_subdev_format *fmt)
 {
 	struct ov5647 *ov5647 = to_state(sd);
+	int i, best_mode = 0;
+	u32 best_diff = ~0;
 
 	mutex_lock(&ov5647->lock);
 
-	/* Only support 640x480 SBGGR8 for now */
-	fmt->format.width = 640;
-	fmt->format.height = 480;
+	/* Find the best matching mode */
+	for (i = 0; i < OV5647_NUM_MODES; i++) {
+		u32 diff = abs((int)ov5647_modes[i].width - (int)fmt->format.width) +
+			   abs((int)ov5647_modes[i].height - (int)fmt->format.height);
+		if (diff < best_diff) {
+			best_diff = diff;
+			best_mode = i;
+		}
+	}
+
+	/* Set the selected mode */
+	fmt->format.width = ov5647_modes[best_mode].width;
+	fmt->format.height = ov5647_modes[best_mode].height;
 	fmt->format.code = MEDIA_BUS_FMT_SBGGR8_1X8;
 	fmt->format.field = V4L2_FIELD_NONE;
 	fmt->format.colorspace = V4L2_COLORSPACE_SRGB;
@@ -661,6 +804,10 @@ static int ov5647_set_fmt(struct v4l2_subdev *sd,
 #ifdef CONFIG_VIDEO_V4L2_SUBDEV_API
 		*v4l2_subdev_get_try_format(sd, cfg, fmt->pad) = fmt->format;
 #endif
+	} else {
+		ov5647->current_mode = best_mode;
+		ov5647->width = fmt->format.width;
+		ov5647->height = fmt->format.height;
 	}
 
 	mutex_unlock(&ov5647->lock);
@@ -684,16 +831,16 @@ static int ov5647_get_selection(struct v4l2_subdev *sd,
 				struct v4l2_subdev_pad_config *cfg,
 				struct v4l2_subdev_selection *sel)
 {
+	struct ov5647 *ov5647 = to_state(sd);
+	const struct ov5647_mode *mode = &ov5647_modes[ov5647->current_mode];
+
 	switch (sel->target) {
 	case V4L2_SEL_TGT_CROP:
-		/*
-		 * Current crop - for 640x480 mode, we use the full active area
-		 * with 4x4 subsampling
-		 */
+		/* Current crop - output size for current mode */
 		sel->r.left = 0;
 		sel->r.top = 0;
-		sel->r.width = 640;
-		sel->r.height = 480;
+		sel->r.width = mode->width;
+		sel->r.height = mode->height;
 		return 0;
 
 	case V4L2_SEL_TGT_NATIVE_SIZE:
@@ -705,14 +852,11 @@ static int ov5647_get_selection(struct v4l2_subdev *sd,
 
 	case V4L2_SEL_TGT_CROP_DEFAULT:
 	case V4L2_SEL_TGT_CROP_BOUNDS:
-		/*
-		 * Report 640x480 as crop bounds to tell CIF the expected
-		 * output size, not the full pixel array
-		 */
+		/* Report current mode size as crop bounds */
 		sel->r.left = 0;
 		sel->r.top = 0;
-		sel->r.width = 640;
-		sel->r.height = 480;
+		sel->r.width = mode->width;
+		sel->r.height = mode->height;
 		return 0;
 	}
 
