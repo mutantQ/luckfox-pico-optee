@@ -103,6 +103,13 @@
 		#clock-cells = <0>;
 	};
 
+	out_osc_ov5647: out-osc-ov5647 {
+		compatible = "fixed-clock";
+		clock-output-names = "out-osc-ov5647";
+		clock-frequency = <25000000>;
+		#clock-cells = <0>;
+	};
+
 	cam_ircut0: cam_ircut {
 		status = "okay";
 		compatible = "rockchip,ircut";
@@ -186,6 +193,13 @@
 				data-lanes = <1 2 3 4>;
 			};
 
+			//ov5647
+			csi_dphy_input2: endpoint@2 {
+				reg = <2>;
+				remote-endpoint = <&ov5647_out>;
+				data-lanes = <1 2>;
+			};
+
 		};
 
 		port@1 {
@@ -208,6 +222,7 @@
 
 	mia1321: mia1321@60 {
 		compatible = "imagedesign,mia1321";
+		status = "disabled";
 		reg = <0x60>;
 		clocks = <&out_osc_mia1321>;
 		clock-names = "xvclk";
@@ -228,7 +243,7 @@
 	
 	imx415: imx415@37 {
 		compatible = "sony,imx415";
-		status = "okay";
+		status = "disabled";
 		reg = <0x37>;
 		clocks = <&out_osc_imx415>;
 		clock-names = "xvclk";
@@ -244,6 +259,27 @@
 			imx415_out: endpoint {
 				remote-endpoint = <&csi_dphy_input1>;
 				data-lanes = <1 2 3 4>;
+			};
+		};
+	};
+
+	ov5647: ov5647@36 {
+		compatible = "ovti,ov5647";
+		status = "okay";
+		reg = <0x36>;
+		clocks = <&out_osc_ov5647>;
+		clock-names = "xvclk";
+		reset-gpios = <&gpio3 RK_PC5 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&cam_io_1>;
+		rockchip,camera-module-index = <0>;
+		rockchip,camera-module-facing = "back";
+		rockchip,camera-module-name = "OV5647";
+		rockchip,camera-module-lens-name = "default";
+		port {
+			ov5647_out: endpoint {
+				remote-endpoint = <&csi_dphy_input2>;
+				data-lanes = <1 2>;
 			};
 		};
 	};
