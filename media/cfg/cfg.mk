@@ -52,7 +52,7 @@ export CONFIG_RK_ROCKIT=y
 # Rockchip's iva
 #
 # Enable iva Build
-export CONFIG_RK_IVA=y
+export CONFIG_RK_IVA=n
 
 #------------------------------------------------
 # Rockchip's ive

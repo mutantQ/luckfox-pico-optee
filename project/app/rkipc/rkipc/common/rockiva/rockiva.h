@@ -5,19 +5,63 @@
 #ifndef __RKIPC_ROCKIVA_H__
 #define __RKIPC_ROCKIVA_H__
 
-#include "rockiva/rockiva_ba_api.h"
+#include <stdint.h>
 
 #define MAX_RKNN_LIST_NUM 10
+#define ROCKIVA_MAX_OBJ_NUM 64
+
+// RockIVA object type constants (stub values)
+#define ROCKIVA_OBJECT_TYPE_PERSON      0
+#define ROCKIVA_OBJECT_TYPE_FACE        1
+#define ROCKIVA_OBJECT_TYPE_VEHICLE     2
+#define ROCKIVA_OBJECT_TYPE_NON_VEHICLE 3
+#define ROCKIVA_OBJECT_TYPE_PET         4
+
+// Stub types for when RockIVA is not available
+typedef struct {
+    int x;
+    int y;
+} RockIvaPoint;
+
+typedef struct {
+    RockIvaPoint topLeft;
+    RockIvaPoint bottomRight;
+} RockIvaRect;
+
+typedef struct {
+    int objId;
+    int frameId;
+    int score;
+    int type;
+    RockIvaRect rect;
+} RockIvaObjectInfo;
+
+typedef struct {
+    int ruleID;
+    int triggerType;
+} RockIvaTriggerInfo;
+
+typedef struct {
+    RockIvaObjectInfo objInfo;
+    int triggerRules;
+    RockIvaTriggerInfo firstTrigger;
+} RockIvaBaObjectInfo;
+
+typedef struct {
+    int objNum;
+    int frameId;
+    RockIvaBaObjectInfo triggerObjects[ROCKIVA_MAX_OBJ_NUM];
+} RockIvaBaResult;
 
 typedef struct node {
-	long long timeval;
-	RockIvaBaResult ba_result;
-	struct node *next;
+    long long timeval;
+    RockIvaBaResult ba_result;
+    struct node *next;
 } Node;
 
 typedef struct my_stack {
-	int size;
-	Node *top;
+    int size;
+    Node *top;
 } rknn_list;
 
 #ifdef __cplusplus
@@ -35,7 +79,9 @@ int rkipc_rockiva_write_nv12_frame_by_fd(uint16_t width, uint16_t height, uint32
 int rkipc_rockiva_write_nv12_frame_by_phy_addr(uint16_t width, uint16_t height, uint32_t frame_id,
                                                uint8_t *phy_addr);
 int rkipc_rknn_object_get(RockIvaBaResult *ba_result);
+
 #ifdef __cplusplus
 }
 #endif
+
 #endif
