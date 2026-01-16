@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+# S40usbconfig - Pre-configure USB gadget for UVC mode
+# This runs BEFORE S50usbdevice to set up /tmp/.usb_config
+#
+
+case "$1" in
+start)
+    # Create USB config file for S50usbdevice to read
+    # Enable UVC, RNDIS (for network access), and ADB
+    cat > /tmp/.usb_config << 'EOF'
+usb_uvc_en
+usb_rndis_en
+usb_adb_en
+EOF
+    echo "USB config set for UVC + RNDIS + ADB mode"
+    ;;
+stop)
+    rm -f /tmp/.usb_config
+    ;;
+*)
+    echo "Usage: $0 {start|stop}"
+    exit 1
+esac
+
+exit 0

@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# S98uvc - Start UVC Camera Application
+# USB gadget is configured by S40usbconfig + S50usbdevice
+#
+
+UVC_APP=/oem/usr/bin/rk_mpi_uvc
+RKUVC_INI=/userdata/rkuvc.ini
+IQ_FILES=/oem/usr/share/iqfiles
+
+case "$1" in
+start)
+    echo "Starting UVC Camera App..."
+
+    # Always copy our config (with enable_aiq=0 for OV5647 without IQ file)
+    cp /oem/usr/share/rkuvc.ini "$RKUVC_INI" 2>/dev/null
+
+    # Wait for USB gadget to be ready
+    sleep 2
+
+    # Start UVC application with correct library path
+    if [ -x "$UVC_APP" ]; then
+        export LD_LIBRARY_PATH=/oem/usr/lib:/oem/lib:$LD_LIBRARY_PATH
+        "$UVC_APP" -c "$RKUVC_INI" -a "$IQ_FILES" &
+        echo "UVC app started"
+    else
+        echo "UVC app not found"
+    fi
+    ;;
+stop)
+    echo "Stopping UVC Camera App..."
+    killall rk_mpi_uvc 2>/dev/null
+    ;;
+restart)
+    $0 stop
+    sleep 1
+    $0 start
+    ;;
+*)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+esac
+
+exit 0

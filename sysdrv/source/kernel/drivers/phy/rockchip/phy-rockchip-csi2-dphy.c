@@ -110,8 +110,8 @@ static int csi2_dphy_get_sensor_data_rate(struct v4l2_subdev *sd)
 	}
 	dphy->data_rate_mbps = qm.value * 2;
 	do_div(dphy->data_rate_mbps, 1000 * 1000);
-	v4l2_info(sd, "dphy%d, data_rate_mbps %lld\n",
-		  dphy->phy_index, dphy->data_rate_mbps);
+	v4l2_info(sd, "dphy%d: link_freq=%lld Hz (idx=%d), data_rate=%lld Mbps\n",
+		  dphy->phy_index, qm.value, qm.index, dphy->data_rate_mbps);
 	return 0;
 }
 

@@ -147,9 +147,11 @@ uvc_device_config()
   configure_uvc_resolution_mjpeg 640 480
   configure_uvc_resolution_mjpeg 768 448
   configure_uvc_resolution_mjpeg 1280 720
+  configure_uvc_resolution_mjpeg 1280 960   # OV5647 native 4:3 mode
   configure_uvc_resolution_mjpeg 1024 768
   configure_uvc_resolution_mjpeg 1920 1080
   configure_uvc_resolution_mjpeg 2048 1536
+  configure_uvc_resolution_mjpeg 2592 1944  # OV5647 5MP full resolution
 #  configure_uvc_resolution_mjpeg 2560 1440
 
   ## h.264 support config
